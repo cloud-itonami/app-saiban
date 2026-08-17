@@ -217,8 +217,10 @@ npm test              # vitest run
 > vitest run
  Test Files  1 passed (1)
       Tests  4 passed (4)
-   Duration  209ms
 ```
+
+（`Duration` は載せていない —— 2 回の実行で 209ms と 323ms に振れた。
+この workstation は並行 agent で load が高く、wall-clock は再現しない。）
 
 ### 3.3 走らせたあとに残るもの
 

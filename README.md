@@ -121,7 +121,7 @@ B は host に `comAtprotoIdentityCreate("court:usa:scotus", …)` を頼む）�
 
 ```
 npm run typecheck   →  exit 0
-npm test            →  Test Files 1 passed (1) / Tests 4 passed (4) / 209ms
+npm test            →  Test Files 1 passed (1) / Tests 4 passed (4)
 ```
 
 4 件のテストが押さえているのは、裁判所の親子 FK・管轄と level の検証・裁判官の
