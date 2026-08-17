@@ -1,0 +1,203 @@
+#!/usr/bin/env nbb
+;; verify-claims.cljs — この repo が自分について述べている数と語彙を、実物と突き合わせる
+;;
+;;   nbb docs/verify-claims.cljs
+;;
+;; exit 0 = PASS / 1 = FAIL / 3 = 判定できなかった（0 でも 1 でもない）
+;;
+;; ── 何を検査するか、そしてなぜこの形なのか ────────────────────────────────
+;;
+;; この repo には 2 つの独立した実装（`appview/.../src/app.ts` と `kotoba/src/`）が
+;; 在り、両者の語彙は一致していない。**その不一致を「あってはならない」と検査すると、
+;; その gate は恒久的に赤になる** —— 誰も行動できない gate は、落ちない gate と
+;; 同じだけ無内容である（superproject CLAUDE.md「gate は fleet で 1 度緑になるまで
+;; landed としない」）。
+;;
+;; だからここが検査するのは不一致の解消ではなく、**README が記録している現在地が
+;; まだ本当か**である。どちらかの語彙が動けばこの gate は赤くなり、README を
+;; 直させる。不一致が解消されたときも赤くなる —— それも正しい。README が
+;; 「不一致がある」と書いたままになるからである。
+;;
+;; 検査（すべて 2026-08-18 時点で緑）:
+;;   ① 宣言された内訳 33 = JP 8 + USA 5 + UK 6 + DE 8 + FR 6 が実際の court 表と一致する
+;;   ② 同じ description が wrangler.jsonc と kotodama.jsonld で byte 一致している
+;;   ③ 2 つの実装の level 語彙が README の記録どおりである
+;;   ④ kotodama.jsonld の重複キーが README の記録どおり（1 個・値は同一）である
+;;
+;; 検査しないもの（黙って飛ばさず UNCHECKABLE として印字する）:
+;;   description の「11 types」「7 types」は、どちらの実装にも対応する検証集合が
+;;   無いので数えようがない。飛ばしたことと合格したことを出力で区別する。
+
+(require '["node:fs" :as fs]
+         '[clojure.string :as str])
+
+(defn- die! [code & msg]
+  (binding [*print-fn* *print-err-fn*] (apply println msg))
+  (js/process.exit code))
+
+(def ^:private appview "appview/etzhayyim-wasm-saiban-sb4n0j1c")
+
+(defn- slurp! [p]
+  (when-not (fs/existsSync p)
+    (die! 3 "UNDETERMINED:" p "が無い。この repo のルートで実行すること"))
+  (fs/readFileSync p "utf8"))
+
+(defn- parse-json! [p text]
+  (try (js->clj (js/JSON.parse text) :keywordize-keys false)
+       (catch :default e
+         (die! 3 "UNDETERMINED:" p "が JSON として読めない（コメント付き jsonc になった?）—"
+               (or (some-> e .-message) "")))))
+
+;; ── README が記録している現在地。ここが gate の錨である ──────────────────
+;;
+;; これらは「こうあるべき」ではなく「2026-08-18 に実際にこうだった」である。
+;; 動いたら README を直す（この定数を黙って合わせない —— それは gate を消すのと同じ）。
+
+(def ^:private recorded
+  {:total 33
+   :by-jurisdiction {"JP" 8 "USA" 5 "UK" 6 "DE" 8 "FR" 6}
+   ;; description のラベル → src/app.ts の jurisdiction 値（ISO alpha-3）
+   :label->code {"JP" "jpn" "USA" "usa" "UK" "gbr" "DE" "deu" "FR" "fra"}
+   :appview-levels #{"administrative-court" "arbitration" "district" "family-court"
+                     "high" "mediation" "summary" "supreme"}
+   :kotoba-levels  #{"appellate" "district" "family" "high" "other" "summary" "supreme"}
+   :duplicate-keys #{"name"}})
+
+;; ── ① court 表を読む ──────────────────────────────────────────────────────
+
+(def ^:private app-ts (slurp! (str appview "/src/app.ts")))
+
+(def ^:private court-rows
+  (vec (map (fn [[_ path _ja _en level jur]]
+              {:path path :level level :jurisdiction jur})
+            (re-seq #"\{ path: \"([^\"]+)\", nameJa: \"([^\"]+)\", nameEn: \"([^\"]+)\", level: \"([^\"]+)\", jurisdiction: \"([^\"]+)\""
+                    app-ts))))
+
+;; evidence floor —— 0 件を「違反なし」にしない。正規表現が源に追随できなく
+;; なったとき、この gate は緑ではなく「答えられなかった」で終わらなければならない。
+(when (zero? (count court-rows))
+  (die! 3 "UNDETERMINED: src/app.ts から court 表を 1 行も読めなかった。"
+        "書式が変わったか、この検査の正規表現が古い"))
+
+(def ^:private actual-by-code (frequencies (map :jurisdiction court-rows)))
+(def ^:private actual-levels (into #{} (map :level court-rows)))
+
+;; ── ② 2 つの description ──────────────────────────────────────────────────
+
+(def ^:private wrangler-path (str appview "/wrangler.jsonc"))
+(def ^:private jsonld-path (str appview "/kotodama.jsonld"))
+
+(def ^:private wrangler (parse-json! wrangler-path (slurp! wrangler-path)))
+(def ^:private jsonld-text (slurp! jsonld-path))
+(def ^:private jsonld (parse-json! jsonld-path jsonld-text))
+
+(def ^:private desc-wrangler (get-in wrangler ["vars" "APP_DESCRIPTION"]))
+(def ^:private desc-jsonld (get-in jsonld ["profile" "description"]))
+
+(when (or (nil? desc-wrangler) (nil? desc-jsonld))
+  (die! 3 "UNDETERMINED: description を両方からは取れなかった"
+        (str "(wrangler=" (some? desc-wrangler) " jsonld=" (some? desc-jsonld) ")")))
+
+(def ^:private declared
+  (let [m (re-find #"(\d+) court-level DIDs \(JP (\d+) \+ USA (\d+) \+ UK (\d+) \+ DE (\d+) \+ FR (\d+)\)"
+                   desc-wrangler)]
+    (when-not m
+      (die! 3 "UNDETERMINED: APP_DESCRIPTION から court の内訳を読めなかった。"
+            "文面が変わったか、この検査の正規表現が古い"))
+    {:total (js/parseInt (nth m 1) 10)
+     :by-jurisdiction (zipmap ["JP" "USA" "UK" "DE" "FR"]
+                              (map #(js/parseInt % 10) (subvec (vec m) 2 7)))}))
+
+;; ── ③ kotoba の level 語彙 ────────────────────────────────────────────────
+
+(def ^:private types-ts (slurp! "kotoba/src/types.ts"))
+
+(def ^:private kotoba-levels
+  (let [m (re-find #"export const LEVELS: ReadonlySet<string> = new Set\(\[([^\]]*)\]\)" types-ts)]
+    (when-not m
+      (die! 3 "UNDETERMINED: kotoba/src/types.ts から LEVELS を読めなかった"))
+    (into #{} (map second (re-seq #"\"([^\"]+)\"" (nth m 1))))))
+
+(when (zero? (count kotoba-levels))
+  (die! 3 "UNDETERMINED: LEVELS が空に読めた"))
+
+;; ── ④ kotodama.jsonld の重複トップレベルキー ─────────────────────────────
+;;
+;; JSON.parse は重複キーを黙って「最後が勝つ」で畳む。畳まれる前の生テキストを
+;; 見ないと重複は観測できない。2 スペース字下げ = トップレベル。
+
+(def ^:private jsonld-top-keys
+  (vec (map second (re-seq #"(?m)^  \"([A-Za-z@]+)\":" jsonld-text))))
+
+(when (zero? (count jsonld-top-keys))
+  (die! 3 "UNDETERMINED: kotodama.jsonld のトップレベルキーを 1 つも読めなかった"))
+
+(def ^:private duplicate-keys
+  (into #{} (map first (filter #(> (val %) 1) (frequencies jsonld-top-keys)))))
+
+;; 重複しているキーの値が全部同じか（違えば「最後が勝つ」が意味を持ってしまう）
+(def ^:private duplicate-values-agree?
+  (every? (fn [k]
+            (let [vs (map second (re-seq (re-pattern (str "(?m)^  \"" k "\": (.+?),?$")) jsonld-text))]
+              (or (< (count vs) 2) (apply = vs))))
+          duplicate-keys))
+
+;; ── 判定 ──────────────────────────────────────────────────────────────────
+
+(def ^:private results
+  [{:what "宣言 total と court 表の行数"
+    :ok (= (:total declared) (count court-rows))
+    :got (count court-rows) :want (:total declared)}
+
+   {:what "宣言 total と README の記録"
+    :ok (= (:total declared) (:total recorded))
+    :got (:total declared) :want (:total recorded)}
+
+   {:what "管轄ごとの内訳（宣言 vs 実表）"
+    :ok (= (:by-jurisdiction declared)
+           (into {} (map (fn [[label code]] [label (get actual-by-code code 0)])
+                         (:label->code recorded))))
+    :got (into (sorted-map) (map (fn [[label code]] [label (get actual-by-code code 0)])
+                                 (:label->code recorded)))
+    :want (into (sorted-map) (:by-jurisdiction declared))}
+
+   {:what "description が wrangler.jsonc と kotodama.jsonld で一致"
+    :ok (= desc-wrangler desc-jsonld)
+    :got (str (count desc-wrangler) " 文字 / jsonld は " (count desc-jsonld) " 文字")
+    :want "byte 一致"}
+
+   {:what "appview の level 語彙が README の記録どおり"
+    :ok (= actual-levels (:appview-levels recorded))
+    :got (vec (sort actual-levels)) :want (vec (sort (:appview-levels recorded)))}
+
+   {:what "kotoba の level 語彙が README の記録どおり"
+    :ok (= kotoba-levels (:kotoba-levels recorded))
+    :got (vec (sort kotoba-levels)) :want (vec (sort (:kotoba-levels recorded)))}
+
+   {:what "kotodama.jsonld の重複トップレベルキーが記録どおり"
+    :ok (= duplicate-keys (:duplicate-keys recorded))
+    :got (vec (sort duplicate-keys)) :want (vec (sort (:duplicate-keys recorded)))}
+
+   {:what "重複キーの値が互いに一致（最後が勝っても意味が変わらない）"
+    :ok duplicate-values-agree?
+    :got duplicate-values-agree? :want true}])
+
+(println (str "SCANNED\t" (count court-rows) " court 行 / "
+              (count kotoba-levels) " kotoba level / "
+              (count jsonld-top-keys) " jsonld キー / "
+              (count results) " 検査"))
+(doseq [{:keys [what ok got want]} results]
+  (println (str (if ok "  ok   " "  FAIL ") what))
+  (println (str "         got  " (pr-str got)))
+  (when-not ok (println (str "         want " (pr-str want)))))
+
+;; 飛ばしたものを、合格したものと同じ顔で終わらせない。
+(println "  --   UNCHECKABLE  description の「11 types」「7 types」")
+(println "         どちらの実装にも case type / event type の検証集合が無い。")
+(println "         appview は既定値 (civil / hearing) を入れるだけで、任意の文字列を受ける。")
+
+(if (every? :ok results)
+  (do (println (str "PASS — " (count results) " 件すべて記録どおり"))
+      (js/process.exit 0))
+  (do (println "FAIL — 実物が README の記録と食い違っている。README を直すこと")
+      (js/process.exit 1)))
