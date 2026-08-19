@@ -4,11 +4,11 @@
   "project": "etzhayyim-project-saiban",
   "name": "etzhayyim-wasm-saiban-sb4n0j1c",
   "kind": "appview",
-  "routeCount": 0,
-  "routes": [],
-  "vars": [],
+  "routeCount": 1,
+  "routes": ["sb4n0j1c.etzhayyim.com/*"],
+  "vars": ["AGENTGATEWAY_MCP_ROUTER_URL","APP_ACTOR_HANDLE","APP_CAPABILITIES","APP_DESCRIPTION","APP_DISPLAY_NAME","APP_EMBED_URL","APP_FRAMEWORK","APP_NANOID","APP_PERFORMER_TYPE","APP_UI_TYPE"],
   "xrpc": true,
-  "relativePath": "60-apps/etzhayyim-project-saiban/appview/etzhayyim-wasm-saiban-sb4n0j1c/svelte/src/routes/+page.svelte"
+  "relativePath": "appview/etzhayyim-wasm-saiban-sb4n0j1c/svelte/src/routes/+page.svelte"
 };
 </script>
 
