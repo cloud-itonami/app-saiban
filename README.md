@@ -167,7 +167,7 @@ host SDK がここに無いからである。観測できるのは「依頼が�
 | 「33 court-level DIDs (JP 8 + USA 5 + UK 6 + DE 8 + FR 6)」 | `src/app.ts` の court 表は **33 行**、内訳も **JP 8 / USA 5 / UK 6 / DE 8 / FR 6** で一致 |
 | `wrangler.jsonc` と `kotodama.jsonld` の description | **byte 一致**（246 文字） |
 
-**この一致は検査できる**（`nbb docs/verify-claims.cljk`、8 件すべて ok）。
+**この一致は検査できる**（`kbb --backend sci docs/verify-claims.cljk`、8 件すべて ok）。
 どちらかの語彙や数が動けばこの検査は赤くなり、この README を直させる。
 §3 の語彙表もこの検査が錨にしている —— **この文書が古くなったことを、機械が言う。**
 
@@ -224,8 +224,8 @@ tree                    :  cbdd0846141721d46612027b2d4cb2235ca4476a
 相殺する改変も捕まる。
 
 ```bash
-nbb docs/verify-custody.cljk            # ローカルのみ
-nbb docs/verify-custody.cljk --origin   # 出所 GitHub の実 tree とも突き合わせる
+kbb --backend sci docs/verify-custody.cljk            # ローカルのみ
+kbb --backend sci docs/verify-custody.cljk --origin   # 出所 GitHub の実 tree とも突き合わせる
 ```
 
 実測（exit 0）:

@@ -36,7 +36,7 @@ cd app-saiban
 残りが、出所と**バイト単位で同一**であることを確かめる。
 
 ```bash
-nbb docs/verify-custody.cljk
+kbb --backend sci docs/verify-custody.cljk
 ```
 
 ```
@@ -53,7 +53,7 @@ PASS — 保管対象 19 ファイルは出所と同一（--origin を付ける�
 `gh` が認証済みなら、出所 GitHub の実 tree とも突き合わせる:
 
 ```bash
-nbb docs/verify-custody.cljk --origin
+kbb --backend sci docs/verify-custody.cljk --origin
 ```
 
 ```
@@ -98,7 +98,7 @@ PASS — 保管対象 19 ファイルは出所と同一
 `README.md` が記録している数と語彙が、まだ本当かを確かめる。
 
 ```bash
-nbb docs/verify-claims.cljk
+kbb --backend sci docs/verify-claims.cljk
 ```
 
 ```
@@ -262,8 +262,8 @@ npm test              # vitest run
 ```bash
 # src/app.ts の1行を書き換え（name_ja: c.nameJa → c.nameEn）、commit し、
 # :tree と :bytes を再計算した値に差し替える
-nbb docs/verify-custody.cljk            # → exit 0   ★通ってしまう
-nbb docs/verify-custody.cljk --origin   # → exit 1   FAIL 出所 GitHub の実 tree
+kbb --backend sci docs/verify-custody.cljk            # → exit 0   ★通ってしまう
+kbb --backend sci docs/verify-custody.cljk --origin   # → exit 1   FAIL 出所 GitHub の実 tree
 ```
 
 このとき `:bytes` は **60120 のまま変わらなかった**（`nameJa` と `nameEn` は同じ
@@ -279,7 +279,7 @@ nbb docs/verify-custody.cljk --origin   # → exit 1   FAIL 出所 GitHub の実
 ## 6. まとめ — 30 秒で健全性を見る
 
 ```bash
-nbb docs/verify-custody.cljk --origin && nbb docs/verify-claims.cljk
+kbb --backend sci docs/verify-custody.cljk --origin && kbb --backend sci docs/verify-claims.cljk
 ```
 
 両方 exit 0 なら、**保管は出所と同一で、`README.md` の記述は実物と合っている**。
