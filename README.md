@@ -167,7 +167,7 @@ host SDK がここに無いからである。観測できるのは「依頼が�
 | 「33 court-level DIDs (JP 8 + USA 5 + UK 6 + DE 8 + FR 6)」 | `src/app.ts` の court 表は **33 行**、内訳も **JP 8 / USA 5 / UK 6 / DE 8 / FR 6** で一致 |
 | `wrangler.jsonc` と `kotodama.jsonld` の description | **byte 一致**（246 文字） |
 
-**この一致は検査できる**（`nbb docs/verify-claims.cljs`、8 件すべて ok）。
+**この一致は検査できる**（`nbb docs/verify-claims.cljk`、8 件すべて ok）。
 どちらかの語彙や数が動けばこの検査は赤くなり、この README を直させる。
 §3 の語彙表もこの検査が錨にしている —— **この文書が古くなったことを、機械が言う。**
 
@@ -224,8 +224,8 @@ tree                    :  cbdd0846141721d46612027b2d4cb2235ca4476a
 相殺する改変も捕まる。
 
 ```bash
-nbb docs/verify-custody.cljs            # ローカルのみ
-nbb docs/verify-custody.cljs --origin   # 出所 GitHub の実 tree とも突き合わせる
+nbb docs/verify-custody.cljk            # ローカルのみ
+nbb docs/verify-custody.cljk --origin   # 出所 GitHub の実 tree とも突き合わせる
 ```
 
 実測（exit 0）:
@@ -252,7 +252,7 @@ PASS
 
 **`migration.edn` の `:identity :allowed-additions` は、この文書を足したときに
 4 エントリ増やした**（`README.md` / `docs/operator-quickstart.md` /
-`docs/verify-custody.cljs` / `docs/verify-claims.cljs`）。これは記録を現実に合わせる
+`docs/verify-custody.cljk` / `docs/verify-claims.cljk`）。これは記録を現実に合わせる
 ための更新で、custody の錨である `:source` ブロック（`:revision` / `:tree` /
 `:tracked-files` / `:bytes`）は 1 バイトも触っていない —— そちらを触れば §9 の検査が
 落ちる。
