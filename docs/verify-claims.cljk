@@ -1,7 +1,7 @@
 #!/usr/bin/env nbb
 ;; verify-claims.cljs — この repo が自分について述べている数と語彙を、実物と突き合わせる
 ;;
-;;   nbb docs/verify-claims.cljs
+;;   nbb docs/verify-claims.cljk
 ;;
 ;; exit 0 = PASS / 1 = FAIL / 3 = 判定できなかった（0 でも 1 でもない）
 ;;
