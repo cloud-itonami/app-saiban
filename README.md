@@ -20,7 +20,7 @@ actor** —— 名前の `saiban` は 裁判 のローマ字表記で、それ�
 
 | 層 | 数 | バイト | 何か |
 |---|---|---|---|
-| **保管対象**（出所からそのまま） | **19** | **60,120** | `CLAUDE.md` `NOTICE` と `appview/` `kotoba/` 配下すべて |
+| **保管対象**（出所からそのまま） | **19** | **60,120** | `AGENTS.md` `NOTICE` と `appview/` `kotoba/` 配下すべて |
 | 抽出時の生成レコード | 2 | 548 | `README.edn` / `migration.edn` |
 | 後から足した文書（保管対象ではない） | 4 | 可変 | この `README.md` と `docs/` の 3 本 |
 
@@ -52,7 +52,7 @@ svelte/.svelte-kit/cloudflare/_worker.js
 
 | 探したもの | 件数 |
 |---|---|
-| repo 内で `src/app.ts` を参照している箇所 | **0**（`CLAUDE.md` の散文を除く） |
+| repo 内で `src/app.ts` を参照している箇所 | **0**（`AGENTS.md` の散文を除く） |
 | `appview/` から `kotoba/` を参照している箇所 | **0** |
 
 配備された worker が XRPC 要求を受けたとき実際に走るのは

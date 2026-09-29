@@ -10,7 +10,7 @@
 ;; この repo には 2 つの独立した実装（`appview/.../src/app.ts` と `kotoba/src/`）が
 ;; 在り、両者の語彙は一致していない。**その不一致を「あってはならない」と検査すると、
 ;; その gate は恒久的に赤になる** —— 誰も行動できない gate は、落ちない gate と
-;; 同じだけ無内容である（superproject CLAUDE.md「gate は fleet で 1 度緑になるまで
+;; 同じだけ無内容である（superproject AGENTS.md「gate は fleet で 1 度緑になるまで
 ;; landed としない」）。
 ;;
 ;; だからここが検査するのは不一致の解消ではなく、**README が記録している現在地が
